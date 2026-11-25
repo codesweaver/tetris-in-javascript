@@ -3,7 +3,7 @@
 const ROWS = 20;
 const COLS = 10;
 const BLOCK_SIZE = 30;
-
+const DROP_INTERVAL = 1000;
 const COLORS = [
     null, // 빈 칸
     "#25edc7",
@@ -56,18 +56,58 @@ const PIECES = [
 const canvas = document.getElementById("mainCanvas");
 const context = canvas.getContext("2d");
 const board = Array(ROWS).fill().map(() => Array(COLS).fill(0));
-let currentPiece = createPiece(7);
+
+let currentPiece = createPiece(getRandomPieceType());
+let prevTimestamp = null;
+let passedTime = 0;
 
 init();
 bindKeyboardEvent();
 draw();
-// startClock();
+requestAnimationFrame(gameLoop);
 
 // functions //
-
 function init() {
     canvas.width = COLS * BLOCK_SIZE;
     canvas.height = ROWS * BLOCK_SIZE;
+}
+
+function tryMoveDown() {
+    if (isValidPosition(currentPiece.piece, currentPiece.row+1, currentPiece.col)) {
+        currentPiece.row++;
+        return true;
+    }
+    return false;
+}
+
+function gameLoop(timestamp) {
+    if (prevTimestamp !== null) {
+        passedTime += (timestamp - prevTimestamp);
+    }
+    prevTimestamp = timestamp;
+
+    if (passedTime >= DROP_INTERVAL) {
+        passedTime = 0;
+
+        if (!tryMoveDown()) {
+            lockPiece();
+            currentPiece = createPiece(getRandomPieceType());
+        }
+
+        draw();
+    }
+    requestAnimationFrame(gameLoop);
+}
+
+function lockPiece() {
+    const piece = currentPiece.piece;
+    for (let row = 0; row < piece.length; row++) {
+        for (let col = 0; col < piece[row].length; col++) {
+            if (piece[row][col]) {
+                board[currentPiece.row + row][currentPiece.col + col] = piece[row][col];
+            }
+        }
+    }
 }
 
 function calculateStartRow(shape) {
@@ -82,17 +122,17 @@ function calculateStartRow(shape) {
     return 0;
 }
 
-function createPiece(number) {
-    return {
-        col : getCenterPosX(PIECES[number].length),
-        row: calculateStartRow(PIECES[number]),
-        piece: PIECES[number]
-    };
+function getRandomPieceType() {
+    return Math.floor(Math.random() * PIECES.length-1) + 1;
 }
 
-// function startClock() {
-//     requestAnimationFrame()
-// }
+function createPiece(type) {
+    return {
+        col : getCenterPosX(PIECES[type].length),
+        row: calculateStartRow(PIECES[type]),
+        piece: PIECES[type]
+    };
+}
 
 function bindKeyboardEvent() {
 
@@ -111,9 +151,7 @@ function bindKeyboardEvent() {
                 break;
             }
             case "ArrowDown": {
-                if (isValidPosition(currentPiece.piece, currentPiece.row+1, currentPiece.col)) {
-                    currentPiece.row++;
-                }
+                tryMoveDown();
                 break;
             }
             case "ArrowUp": {
