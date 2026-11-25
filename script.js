@@ -3,6 +3,7 @@
 const ROWS = 20;
 const COLS = 10;
 const BLOCK_SIZE = 30;
+
 const COLORS = [
     null, // 빈 칸
     "#25edc7",
@@ -13,6 +14,7 @@ const COLORS = [
     "#fbdc00",
     "#ff0015",
 ];
+
 const PIECES = [
     null, // 빈 칸
     [ // T
@@ -45,12 +47,13 @@ const PIECES = [
         [0, 0, 0],
     ],
     [ // I
-        [7, 7, 7, 7],
         [0, 0, 0, 0],
+        [7, 7, 7, 7],
         [0, 0, 0, 0],
         [0, 0, 0, 0],
     ]
 ];
+
 const currentPiece = {
     col : getCenterPosX(PIECES[1].length),
     row: 0,
@@ -73,23 +76,78 @@ function init() {
 }
 
 function bindKeyboardEvent() {
+
     window.addEventListener("keydown", (e) => {
         switch (e.key) {
-            case "ArrowLeft":
-                currentPiece.col--;
+            case "ArrowLeft": {
+                if (isValidPosition(currentPiece.piece, currentPiece.row, currentPiece.col-1)) {
+                    currentPiece.col--;
+                }
                 break;
-            case "ArrowRight":
-                currentPiece.col++;
+            }
+            case "ArrowRight": {
+                if (isValidPosition(currentPiece.piece, currentPiece.row, currentPiece.col+1)) {
+                    currentPiece.col++;
+                }
                 break;
-            case "ArrowDown":
-                currentPiece.row++;
+            }
+            case "ArrowDown": {
+                if (isValidPosition(currentPiece.piece, currentPiece.row+1, currentPiece.col)) {
+                    currentPiece.row++;
+                }
                 break;
-            default: return;
+            }
+            case "ArrowUp": {
+                const rotatedShape = rotateClockwise90(currentPiece.piece);
+                if (isValidPosition(rotatedShape, currentPiece.row, currentPiece.col)) {
+                    currentPiece.piece = rotatedShape;
+                }
+                break;
+            }
+            default: {
+                return;
+            }
         }
 
         e.preventDefault();
         draw();
     });
+}
+
+function isValidPosition(shape, targetRow, targetCol) {
+    for (let row = 0; row < shape.length; row++) {
+        for (let col = 0; col < shape[row].length; col++) {
+            const boardRow = row + targetRow;
+            const boardCol = col + targetCol;
+            const cell = shape[row][col];
+
+            if (cell) {
+                if (isInsideBoard(boardCol, boardRow) || board[boardRow][boardCol]) {
+                    return false;
+                }
+            }
+        }
+    }
+
+    return true;
+}
+
+function isInsideBoard(boardCol, boardRow) {
+    return boardCol < 0 || boardCol >= COLS || boardRow < 0 || boardRow >= ROWS
+}
+
+function rotateClockwise90(shape) {
+    const rows = shape.length;
+    const cols = shape[0].length;
+    const rotated = Array.from({ length: cols }, () => Array(rows));
+
+    for (let row = 0; row < rows; row++) {
+        for (let col = 0; col < cols; col++) {
+            rotated[col][rows - 1 - row] = shape[row][col];
+        }
+    }
+
+    return rotated;
 }
 
 function draw() {
@@ -122,7 +180,7 @@ function drawPiece() {
 
     const shape = currentPiece.piece;
     for (let row = 0; row < shape.length; row++) {
-        for (let col = 0; col < shape[0].length; col++) {
+        for (let col = 0; col < shape[row].length; col++) {
             const cell = shape[row][col];
             if (cell) {
                 context.fillStyle = COLORS[cell];
