@@ -52,16 +52,6 @@ const PIECES = [
         [0, 0, 0, 0],
     ]
 ];
-const PIECE_START_ROWS = [
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    -1
-];
 
 const canvas = document.getElementById("mainCanvas");
 const context = canvas.getContext("2d");
@@ -71,7 +61,7 @@ let currentPiece = createPiece(7);
 init();
 bindKeyboardEvent();
 draw();
-startClock();
+// startClock();
 
 // functions //
 
@@ -80,12 +70,24 @@ function init() {
     canvas.height = ROWS * BLOCK_SIZE;
 }
 
+function calculateStartRow(shape) {
+    for (let row = 0; row < shape.length; row++) {
+        for (let col = 0; col < shape[row].length; col++) {
+            if (shape[row][col]) {
+                return -row;
+            }
+        }
+    }
+
+    return 0;
+}
+
 function createPiece(number) {
     return {
         col : getCenterPosX(PIECES[number].length),
-        row: PIECE_START_ROWS[number],
+        row: calculateStartRow(PIECES[number]),
         piece: PIECES[number]
-    }
+    };
 }
 
 // function startClock() {
