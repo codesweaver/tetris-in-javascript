@@ -14,7 +14,6 @@ const COLORS = [
     "#fbdc00",
     "#ff0015",
 ];
-
 const PIECES = [
     null, // 빈 칸
     [ // T
@@ -53,20 +52,26 @@ const PIECES = [
         [0, 0, 0, 0],
     ]
 ];
-
-const currentPiece = {
-    col : getCenterPosX(PIECES[1].length),
-    row: 0,
-    piece: PIECES[1]
-};
+const PIECE_START_ROWS = [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    -1
+];
 
 const canvas = document.getElementById("mainCanvas");
 const context = canvas.getContext("2d");
 const board = Array(ROWS).fill().map(() => Array(COLS).fill(0));
+let currentPiece = createPiece(7);
 
 init();
 bindKeyboardEvent();
 draw();
+startClock();
 
 // functions //
 
@@ -74,6 +79,18 @@ function init() {
     canvas.width = COLS * BLOCK_SIZE;
     canvas.height = ROWS * BLOCK_SIZE;
 }
+
+function createPiece(number) {
+    return {
+        col : getCenterPosX(PIECES[number].length),
+        row: PIECE_START_ROWS[number],
+        piece: PIECES[number]
+    }
+}
+
+// function startClock() {
+//     requestAnimationFrame()
+// }
 
 function bindKeyboardEvent() {
 
@@ -122,7 +139,7 @@ function isValidPosition(shape, targetRow, targetCol) {
             const cell = shape[row][col];
 
             if (cell) {
-                if (isInsideBoard(boardCol, boardRow) || board[boardRow][boardCol]) {
+                if (isOutsideBoard(boardRow, boardCol) || hasCollision(boardRow, boardCol)) {
                     return false;
                 }
             }
@@ -132,8 +149,12 @@ function isValidPosition(shape, targetRow, targetCol) {
     return true;
 }
 
-function isInsideBoard(boardCol, boardRow) {
-    return boardCol < 0 || boardCol >= COLS || boardRow < 0 || boardRow >= ROWS
+function isOutsideBoard(boardRow, boardCol) {
+    return boardCol < 0 || boardCol >= COLS || boardRow < 0 || boardRow >= ROWS;
+}
+
+function hasCollision(boardRow, boardCol) {
+    return board[boardRow][boardCol];
 }
 
 function rotateClockwise90(shape) {
