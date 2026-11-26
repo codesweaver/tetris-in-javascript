@@ -123,7 +123,7 @@ function calculateStartRow(shape) {
 }
 
 function getRandomPieceType() {
-    return Math.floor(Math.random() * PIECES.length-1) + 1;
+    return Math.floor(Math.random() * (PIECES.length-1)) + 1;
 }
 
 function createPiece(type) {
